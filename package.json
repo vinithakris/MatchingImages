@@ -1,0 +1,13 @@
+{
+  "name": "aifs-ca",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Starter workspace for the AIFS CA project",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

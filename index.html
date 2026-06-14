@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIFS CA Memory Match</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #111827);
+        color: #e5eefb;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        background: radial-gradient(circle at top, #1e293b, #020617 60%);
+      }
+
+      .panel {
+        width: 100vw;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.99));
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 12px 12px 10px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+      }
+
+      p { color: #dbe7ff; line-height: 1.45; }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .badge-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        border-radius: 999px;
+        border: 1px solid rgba(125, 211, 252, 0.25);
+        background: rgba(30, 41, 59, 0.95);
+        padding: 10px 14px;
+        font-weight: 700;
+        color: #e0f2fe;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: transform 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover { transform: translateY(-1px); }
+
+      .ghost {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: #eff6ff;
+        padding: 10px 14px;
+        font-weight: 700;
+      }
+
+      .danger {
+        background: linear-gradient(135deg, #7f1d1d, #dc2626);
+        color: #fff7ed;
+        padding: 10px 14px;
+        font-weight: 700;
+      }
+
+      .game-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 12px;
+        align-items: stretch;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        min-height: 0;
+        align-content: stretch;
+      }
+
+      .tile {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #1f2937, #111827);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.35), inset 0 -2px 0 rgba(148, 163, 184, 0.08);
+        display: grid;
+        place-items: center;
+        font-size: clamp(1rem, 2.5vw, 1.5rem);
+        color: #f8fafc;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(15, 23, 42, 0.9);
+        padding: 6px;
+      }
+
+      .tile.hidden {
+        background: linear-gradient(145deg, #1e3a8a, #111827);
+        color: #e0f2fe;
+        box-shadow: 0 10px 20px rgba(30, 41, 59, 0.45), inset 0 -2px 0 rgba(125, 211, 252, 0.12);
+      }
+
+      .tile span,
+      .tile::after {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80%;
+        height: 80%;
+        font-size: inherit;
+      }
+      .tile.matched { border-color: #4ade80; box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15); }
+      .tile.locked { cursor: default; }
+
+      .sidebar {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .card {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1.02rem;
+        color: #bfdbfe;
+      }
+
+      .card ul { margin: 0; padding-left: 18px; color: #e5eefb; }
+
+      .status-box {
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        color: #fef08a;
+      }
+
+      @media (max-width: 1080px) {
+        .game-layout {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .board {
+          max-width: 760px;
+          min-height: 380px;
+          margin: 0 auto;
+        }
+
+        .sidebar { order: -1; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <h1>AIFS CA Memory Match</h1>
+      <p>Memorize all 16 tiles in 10 seconds, then flip the cards face-down and find the 8 matching pairs. Every match earns 100 points.</p>
+
+      <div class="topbar">
+        <div class="badge-row">
+          <span class="pill" id="score-pill">Score: 0</span>
+          <span class="pill" id="pairs-pill">Pairs found: 0 / 8</span>
+          <span class="pill" id="timer-pill">Time to memorize: 10</span>
+        </div>
+        <div class="button-row">
+          <button class="ghost" id="restart-btn" type="button">Restart Game</button>
+          <button class="danger" id="exit-btn" type="button">Exit Game</button>
+        </div>
+      </div>
+
+      <section class="game-layout">
+        <div class="board" id="board" aria-label="Memory match game board"></div>
+
+        <aside class="sidebar">
+          <article class="card">
+            <h2>How to play</h2>
+            <ul>
+              <li>Watch the board for 10 seconds.</li>
+              <li>After the countdown, the tiles turn face-down.</li>
+              <li>Select two matching tiles to score points.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h2>Status</h2>
+            <div class="status-box" id="status-text">Memorize the tiles now.</div>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./src/app.js"></script>
+  </body>
+</html>
